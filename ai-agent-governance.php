@@ -14,6 +14,8 @@
 
 defined( 'ABSPATH' ) || exit;
 
+
+
 define( 'AIAG_VERSION', '0.1.0' );
 define( 'AIAG_FILE', __FILE__ );
 define( 'AIAG_DIR', plugin_dir_path( __FILE__ ) );
@@ -35,9 +37,6 @@ if ( ! defined( 'AIAG_PRO' ) ) {
 // Includes.
 require_once AIAG_DIR . 'includes/db.php';
 require_once AIAG_DIR . 'includes/policy.php';
-if ( file_exists( AIAG_DIR . 'includes/freemius-config.php' ) ) {
-    require_once AIAG_DIR . 'includes/freemius-config.php';
-}
 if ( AIAG_PRO ) {
     require_once AIAG_DIR . 'includes/audit.php';
 }
