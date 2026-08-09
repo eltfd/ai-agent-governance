@@ -17,9 +17,8 @@ AI Agent Governance sits between AI agents (ChatGPT, Claude, WPVibe, etc.) and y
 * **Policy Rules** — wildcard pattern matching to allow, deny, or hold abilities
 * **Approval Queue** — destructive actions require admin approval before execution
 * **Audit Log** — complete trail of every AI agent attempt
+* **Undo** — snapshot before destructive operations, restore with 1-click
 * **Blocked List** — explicit blocklist for specific ability names or patterns
-
-Looking for more? The **Pro** version adds **Undo/Rollback**, **Email alerts**, and **Telegram notifications** for pending approvals.
 
 == Installation ==
 
@@ -55,6 +54,17 @@ Looking for more? The **Pro** version adds **Undo/Rollback**, **Email alerts**, 
 
 * **Audit Trail**
   - Go to **Audit Log** tab to view timestamped history of all agent action attempts, parameters, decisions, and execution outcomes.
+
+=== Telegram Notifications (Pro) ===
+
+Get instant Telegram alerts when an AI action enters the approval queue.
+
+**Setup:**
+1. **Bot Token** — open Telegram, message `@BotFather`, send `/newbot`, choose a name and username, copy the token it returns.
+2. **Chat ID** — message `@userinfobot`; it replies with `Id: 123456789` — that number is your Chat ID. Alternative: message your bot once, then open `https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates` in a browser and read the `chat.id` value.
+3. Go to **AI Governance** dashboard → **Telegram Notifications** card, paste both values, tick **Enable Telegram alerts for pending approvals**, click **Save Telegram Settings**.
+
+From then on, every held action sends a Telegram message with the ability name, reason, entry ID, and approve/reject link.
 
 == Changelog ==
 
