@@ -120,6 +120,26 @@ function aiag_deactivate() {
 }
 register_deactivation_hook( __FILE__, 'aiag_deactivate' );
 
+/**
+ * Uninstall (via Freemius after_uninstall hook) — drop tables, delete options.
+ * Fires when the plugin is deleted from the site.
+ */
+function aiag_uninstall() {
+    global $wpdb;
+    $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}aiag_audit" );
+    $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}aiag_hold" );
+    $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}aiag_snapshots" );
+
+    delete_option( 'aiag_kill_switch' );
+    delete_option( 'aiag_default_action' );
+    delete_option( 'aiag_blocked_abilities' );
+    delete_option( 'aiag_policies' );
+    delete_option( 'aiag_telegram_enabled' );
+    delete_option( 'aiag_telegram_bot_token' );
+    delete_option( 'aiag_telegram_chat_id' );
+}
+wag_fs()->add_action( 'after_uninstall', 'aiag_uninstall' );
+
 /* ─── DECISION ENGINE ─── */
 
 /**
