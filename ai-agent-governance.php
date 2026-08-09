@@ -15,7 +15,6 @@
 defined( 'ABSPATH' ) || exit;
 
 
-
 define( 'AIAG_VERSION', '0.1.0' );
 define( 'AIAG_FILE', __FILE__ );
 define( 'AIAG_DIR', plugin_dir_path( __FILE__ ) );
@@ -44,15 +43,17 @@ require_once AIAG_DIR . 'includes/admin.php';
 
 /**
  * Resolve Pro access. With Freemius configured, a valid premium license
- * unlocks Pro features at runtime. Otherwise falls back to the build flag.
+ * (or trial) unlocks Pro features at runtime. Otherwise falls back to the
+ * build flag. Uses can_use_premium_code__premium_only() — the recommended
+ * gate for a single paid plan; this block is stripped from the free build.
  */
 function aiag_is_pro(): bool {
     static $pro = null;
     if ( null !== $pro ) {
         return $pro;
     }
-    if ( function_exists( 'aiag_freemius_is_premium' ) ) {
-        $pro = aiag_freemius_is_premium();
+    if ( function_exists( 'wag_fs' ) ) {
+        $pro = wag_fs()->can_use_premium_code__premium_only();
     } else {
         $pro = (bool) AIAG_PRO;
     }
