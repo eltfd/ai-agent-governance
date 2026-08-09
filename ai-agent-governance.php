@@ -52,8 +52,8 @@ function aiag_is_pro(): bool {
     if ( null !== $pro ) {
         return $pro;
     }
-    if ( defined( 'AIAG_FS_ID' ) && AIAG_FS_ID && defined( 'AIAG_FS_PUBLIC_KEY' ) && false !== strpos( AIAG_FS_PUBLIC_KEY, 'pk_' ) ) {
-        $pro = aiag_freemius_init();
+    if ( function_exists( 'aiag_freemius_is_premium' ) ) {
+        $pro = aiag_freemius_is_premium();
     } else {
         $pro = (bool) AIAG_PRO;
     }
