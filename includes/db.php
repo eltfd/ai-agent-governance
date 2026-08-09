@@ -37,15 +37,20 @@ function aiag_create_tables(): void {
         KEY idx_created (created_at)
     ) {$charset};";
 
-    $sql .= "CREATE TABLE {$prefix}aiag_snapshots (
+    $sql .= "CREATE TABLE {$prefix}aiag_hold (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        hold_id BIGINT UNSIGNED NOT NULL,
-        entity_type VARCHAR(64) NOT NULL DEFAULT 'post',
-        entity_id BIGINT UNSIGNED NOT NULL,
-        snapshot LONGTEXT NOT NULL,
+        ability_name VARCHAR(255) NOT NULL,
+        input LONGTEXT,
+        reason TEXT,
+        context LONGTEXT,
+        status VARCHAR(32) NOT NULL DEFAULT 'pending',
+        reviewer_id BIGINT UNSIGNED DEFAULT NULL,
+        reviewed_at DATETIME DEFAULT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        KEY idx_hold (hold_id)
+        KEY idx_status (status),
+        KEY idx_created (created_at)
     ) {$charset};";
+
 
     require_once ABSPATH . 'wp-admin/includes/upgrade.php';
     dbDelta( $sql );

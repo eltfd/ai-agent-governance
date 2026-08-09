@@ -29,15 +29,7 @@ function aiag_handle_actions() {
             $hold_id = absint( $_POST['hold_id'] ?? 0 );
             if ( $hold_id ) {
                 $input = json_decode( wp_unslash( $_POST['input'] ?? '{}' ), true );
-                if ( ! empty( $input['post_id'] ) ) {
-                    aiag_snapshot_post( (int) $input['post_id'], $hold_id );
-                }
                 aiag_approve_hold( $hold_id );
-                $res = aiag_execute_approved( $hold_id );
-                add_settings_error( 'aiag', $res['success'] ? 'approved' : 'exec_err',
-                    $res['success'] ? 'Approved & executed.' : 'Approved but execution failed: ' . $res['error'],
-                    $res['success'] ? 'success' : 'error'
-                );
             }
             break;
         case 'reject':
@@ -48,14 +40,6 @@ function aiag_handle_actions() {
             }
             break;
         case 'undo':
-            if ( ! aiag_is_pro() ) {
-                break;
-            }
-            $hold_id = absint( $_POST['hold_id'] ?? 0 );
-            if ( $hold_id ) {
-                $ok = aiag_undo_snapshot( $hold_id );
-                add_settings_error( 'aiag', $ok ? 'restored' : 'no_snap', $ok ? 'Post restored.' : 'No snapshot found.', $ok ? 'success' : 'error' );
-            }
             break;
         case 'toggle_kill':
             $cur = get_option( AIAG_OPTION_PREFIX . 'kill_switch', 0 );
@@ -75,10 +59,6 @@ function aiag_handle_actions() {
             add_settings_error( 'aiag', 'blk', 'Blocked list updated.', 'success' );
             break;
         case 'update_telegram':
-            update_option( AIAG_OPTION_PREFIX . 'telegram_enabled', empty( $_POST['telegram_enabled'] ) ? 0 : 1 );
-            update_option( AIAG_OPTION_PREFIX . 'telegram_bot_token', sanitize_text_field( wp_unslash( $_POST['telegram_bot_token'] ?? '' ) ) );
-            update_option( AIAG_OPTION_PREFIX . 'telegram_chat_id', sanitize_text_field( wp_unslash( $_POST['telegram_chat_id'] ?? '' ) ) );
-            add_settings_error( 'aiag', 'tg', 'Telegram settings saved.', 'success' );
             break;
     }
 }
@@ -158,37 +138,8 @@ function aiag_render_dashboard() {
         <div class="card" style="padding:16px;margin-top:16px;">
             <h3>🔔 Telegram Notifications <?php if ( ! aiag_is_pro() ) : ?><span class="dashicons dashicons-star-filled" style="color:#f5a623;" title="Pro feature"></span><?php endif; ?></h3>
             <?php if ( aiag_is_pro() ) : ?>
-            <form method="post">
-                <?php wp_nonce_field( 'aiag_action', 'aiag_nonce' ); ?>
-                <input type="hidden" name="aiag_action" value="update_telegram">
-                <p>
-                    <label style="font-weight:600;">
-                        <input type="checkbox" name="telegram_enabled" value="1" <?php checked( get_option( AIAG_OPTION_PREFIX . 'telegram_enabled', 0 ) ); ?>>
-                        Enable Telegram alerts for pending approvals
-                    </label>
-                </p>
-                <p>
-                    <label>Bot Token</label><br>
-                    <input type="text" name="telegram_bot_token" size="50" class="regular-text" value="<?php echo esc_attr( get_option( AIAG_OPTION_PREFIX . 'telegram_bot_token', '' ) ); ?>">
-                </p>
-                <p>
-                    <label>Chat ID</label><br>
-                    <input type="text" name="telegram_chat_id" size="50" class="regular-text" value="<?php echo esc_attr( get_option( AIAG_OPTION_PREFIX . 'telegram_chat_id', '' ) ); ?>">
-                </p>
-                <button type="submit" class="button button-primary">Save Telegram Settings</button>
-            </form>
-            <h4 style="margin-top:16px;">How to set up</h4>
-            <ol>
-                <li><strong>Get a Bot Token:</strong> open Telegram, message <code>@BotFather</code> → send <code>/newbot</code> → choose a name/username → copy the token it gives you.</li>
-                <li><strong>Get your Chat ID:</strong> message <code>@userinfobot</code> → it replies with <code>Id: 123456789</code> — that number is your Chat ID. (Or: message your bot once, then open <code>https://api.telegram.org/bot&lt;YOUR_TOKEN&gt;/getUpdates</code> in a browser and read <code>chat.id</code>.)</li>
-                <li>Paste both values above, tick <strong>Enable</strong>, and click <strong>Save</strong>.</li>
-                <li>Whenever an AI action enters the approval queue, you now get an instant Telegram alert with the ability, reason, and direct approve/reject link.</li>
-            </ol>
             <?php else : ?>
                 <p>Telegram notifications are a <strong>Pro</strong> feature. Upgrade to get instant alerts for pending approvals.</p>
-                <?php if ( function_exists( 'wag_fs' ) && wag_fs()->is_not_paying() ) : ?>
-                    <p><a class="button button-primary" href="<?php echo esc_url( wag_fs()->get_upgrade_url() ); ?>">Upgrade Now</a></p>
-                <?php endif; ?>
             <?php endif; ?>
         </div>
     </div>

@@ -14,59 +14,6 @@
 
 defined( 'ABSPATH' ) || exit;
 
-if ( function_exists( 'wag_fs' ) ) {
-    wag_fs()->set_basename( true, __FILE__ );
-} else {
-    /**
-     * DO NOT REMOVE THIS IF, IT IS ESSENTIAL FOR THE
-     * `function_exists` CALL ABOVE TO PROPERLY WORK.
-     */
-    if ( ! function_exists( 'wag_fs' ) ) {
-        // Create a helper function for easy SDK access.
-        function wag_fs() {
-            global $wag_fs;
-
-            if ( ! isset( $wag_fs ) ) {
-                // Activate multisite network integration.
-                if ( ! defined( 'WP_FS__PRODUCT_36789_MULTISITE' ) ) {
-                    define( 'WP_FS__PRODUCT_36789_MULTISITE', true );
-                }
-
-                // Include Freemius SDK.
-                require_once dirname( __FILE__ ) . '/vendor/freemius/start.php';
-
-                $wag_fs = fs_dynamic_init( array(
-                    'id'                  => '36789',
-                    'slug'                => 'wp-ai-governance',
-                    'type'                => 'plugin',
-                    'public_key'          => 'pk_d2c889be8503f956cc7ad680765a2',
-                    'is_premium'          => true,
-                    'premium_suffix'      => 'Pro',
-                    // If your plugin is a serviceware, set this option to false.
-                    'has_premium_version' => true,
-                    'has_addons'          => false,
-                    'has_paid_plans'      => true,
-                    'is_org_compliant'    => true,
-                    'trial'               => array(
-                        'days'               => 7,
-                        'is_require_payment' => true,
-                    ),
-                    'menu'                => array(
-                        'slug'           => 'wp-ai-governance',
-                        'network'        => true,
-                    ),
-                ) );
-            }
-
-            return $wag_fs;
-        }
-
-        // Init Freemius.
-        wag_fs();
-        // Signal that SDK was initiated.
-        do_action( 'wag_fs_loaded' );
-    }
-}
 
 define( 'AIAG_VERSION', '0.1.0' );
 define( 'AIAG_FILE', __FILE__ );
@@ -74,24 +21,38 @@ define( 'AIAG_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AIAG_URL', plugin_dir_url( __FILE__ ) );
 define( 'AIAG_OPTION_PREFIX', 'aiag_' );
 
+/**
+ * Pro build flag. Free build (public repo / Freemius free tier) sets this 0;
+ * Pro build (private repo / paid tier) sets this 1. Controls: undo/rollback,
+ * Telegram notifications, email notifications, advanced policy rules.
+ *
+ * When Freemius is configured (Pro build), AIAG_PRO is resolved at runtime
+ * from the active license instead of the build-time constant.
+ */
+if ( ! defined( 'AIAG_PRO' ) ) {
+    define( 'AIAG_PRO', 0 );
+}
+
 // Includes.
 require_once AIAG_DIR . 'includes/db.php';
 require_once AIAG_DIR . 'includes/policy.php';
-require_once AIAG_DIR . 'includes/audit.php';
+if ( AIAG_PRO ) {
+    require_once AIAG_DIR . 'includes/audit.php';
+}
 require_once AIAG_DIR . 'includes/admin.php';
 
 /**
- * Resolve Pro access. A valid premium license (or trial) unlocks Pro
- * features at runtime via Freemius. Uses can_use_premium_code__premium_only()
- * — the recommended gate for a single paid plan.
+ * Resolve Pro access. With Freemius configured, a valid premium license
+ * (or trial) unlocks Pro features at runtime. Otherwise falls back to the
+ * build flag. Uses can_use_premium_code__premium_only() — the recommended
+ * gate for a single paid plan; this block is stripped from the free build.
  */
 function aiag_is_pro(): bool {
     static $pro = null;
     if ( null !== $pro ) {
         return $pro;
     }
-    $pro = wag_fs()->can_use_premium_code__premium_only();
-    return $pro;
+    return (bool) $pro;
 }
 
 /**
@@ -128,17 +89,12 @@ function aiag_uninstall() {
     global $wpdb;
     $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}aiag_audit" );
     $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}aiag_hold" );
-    $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}aiag_snapshots" );
 
     delete_option( 'aiag_kill_switch' );
     delete_option( 'aiag_default_action' );
     delete_option( 'aiag_blocked_abilities' );
     delete_option( 'aiag_policies' );
-    delete_option( 'aiag_telegram_enabled' );
-    delete_option( 'aiag_telegram_bot_token' );
-    delete_option( 'aiag_telegram_chat_id' );
 }
-wag_fs()->add_action( 'after_uninstall', 'aiag_uninstall' );
 
 /* ─── DECISION ENGINE ─── */
 
