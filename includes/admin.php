@@ -186,6 +186,9 @@ function aiag_render_dashboard() {
             </ol>
             <?php else : ?>
                 <p>Telegram notifications are a <strong>Pro</strong> feature. Upgrade to get instant alerts for pending approvals.</p>
+                <?php if ( function_exists( 'wag_fs' ) && wag_fs()->is_not_paying() ) : ?>
+                    <p><a class="button button-primary" href="<?php echo esc_url( wag_fs()->get_upgrade_url() ); ?>">Upgrade Now</a></p>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
     </div>
